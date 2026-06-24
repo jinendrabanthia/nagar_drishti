@@ -1,10 +1,12 @@
 import ReportForm from '@/components/ReportForm';
-import Link from 'next/line'; // Wait, let's just use Next Link properly
-// Oh wait, next/link
+import CitizenLogin from '@/components/CitizenLogin';
 import NextLink from 'next/link';
 import { ShieldAlert } from 'lucide-react';
+import { cookies } from 'next/headers';
 
-export default function Home() {
+export default async function Home() {
+  const citizenId = (await cookies()).get('citizen_id')?.value;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-blue-500/30 flex flex-col">
       <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
@@ -15,7 +17,12 @@ export default function Home() {
             </div>
             <span className="font-bold text-xl tracking-tight text-white">CivicTriage AI</span>
           </div>
-          <nav>
+          <nav className="flex items-center gap-6">
+            {citizenId && (
+              <NextLink href="/my-reports" className="text-sm font-medium text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700">
+                My Reports
+              </NextLink>
+            )}
             <NextLink href="/official" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
               City Official Login
             </NextLink>
@@ -26,7 +33,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 max-w-6xl mx-auto w-full">
         <div className="flex-1 space-y-6 max-w-xl">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-            See it. <span className="text-blue-500">Snap it.</span> <br/> We'll fix it.
+            See it. <span className="text-blue-500">Snap it.</span> <br/> We&apos;ll fix it.
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed">
             Report potholes, hazards, and infrastructure issues in seconds. Our AI instantly analyzes the severity and routes it directly to the right city crew.
@@ -47,7 +54,7 @@ export default function Home() {
           {/* Decorative glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur opacity-20 animate-pulse"></div>
           <div className="relative">
-            <ReportForm />
+            {citizenId ? <ReportForm citizenId={citizenId} /> : <CitizenLogin />}
           </div>
         </div>
       </main>

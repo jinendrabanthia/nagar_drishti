@@ -5,13 +5,14 @@ import { submitReport } from '@/app/actions/submit-report';
 import { Button } from '@/components/ui/button';
 import { Camera, MapPin, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import NextLink from 'next/link';
 
 const Map = dynamic(() => import('@/components/Map'), { 
   ssr: false, 
   loading: () => <div className="w-full h-full bg-slate-800 animate-pulse rounded-xl flex items-center justify-center text-slate-400">Loading Map...</div> 
 });
 
-export default function ReportForm() {
+export default function ReportForm({ citizenId }: { citizenId: string }) {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(null);
@@ -19,7 +20,7 @@ export default function ReportForm() {
   const [description, setDescription] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<{ success: boolean; duplicateOf?: string; message?: string; data?: any; error?: string; } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +44,7 @@ export default function ReportForm() {
     formData.append('lat', lat.toString());
     formData.append('lng', lng.toString());
     formData.append('description', description);
+    formData.append('citizen_id', citizenId);
 
     const response = await submitReport(formData);
     
@@ -66,12 +68,17 @@ export default function ReportForm() {
           <div className="bg-slate-800 rounded-xl p-4 text-left mb-6 text-sm">
             <p className="text-slate-300"><span className="font-semibold text-white">AI Category:</span> {result.data.ai_category}</p>
             <p className="text-slate-300"><span className="font-semibold text-white">Severity Score:</span> <span className={result.data.ai_severity > 80 ? 'text-red-400' : 'text-orange-400'}>{result.data.ai_severity}/100</span></p>
-            <p className="text-slate-300 mt-2 italic">"{result.data.ai_justification}"</p>
+            <p className="text-slate-300 mt-2 italic">&quot;{result.data.ai_justification}&quot;</p>
           </div>
         )}
-        <Button onClick={() => window.location.reload()} className="w-full bg-blue-600 hover:bg-blue-700">
-          Submit Another
-        </Button>
+        <div className="flex gap-4">
+          <Button onClick={() => window.location.reload()} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700">
+            Submit Another
+          </Button>
+          <NextLink href="/my-reports" className="flex-1 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all active:scale-[0.98]">
+            Track My Reports
+          </NextLink>
+        </div>
       </div>
     );
   }
@@ -106,7 +113,10 @@ export default function ReportForm() {
           className={`h-32 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-colors ${preview ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-slate-500 bg-slate-800/50'}`}
         >
           {preview ? (
-            <img src={preview} alt="Preview" className="h-full w-full object-cover rounded-lg opacity-80" />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview} alt="Preview" className="h-full w-full object-cover rounded-lg opacity-80" />
+            </>
           ) : (
             <div className="text-center text-slate-400">
               <Camera size={24} className="mx-auto mb-2 opacity-50" />

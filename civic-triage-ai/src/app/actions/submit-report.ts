@@ -9,8 +9,9 @@ export async function submitReport(formData: FormData) {
     const latStr = formData.get('lat') as string;
     const lngStr = formData.get('lng') as string;
     const description = formData.get('description') as string;
+    const citizenId = formData.get('citizen_id') as string;
 
-    if (!file || !latStr || !lngStr) {
+    if (!file || !latStr || !lngStr || !citizenId) {
       throw new Error("Missing required fields");
     }
 
@@ -23,7 +24,7 @@ export async function submitReport(formData: FormData) {
     
     // 2. Upload image to Supabase Storage
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('report-images')
       .upload(fileName, file, { contentType: file.type });
 
@@ -39,6 +40,7 @@ export async function submitReport(formData: FormData) {
     
     // 4. Save to Database
     const reportData = {
+      citizen_id: citizenId,
       location: `POINT(${lng} ${lat})`,
       lat,
       lng,
@@ -75,7 +77,7 @@ export async function submitReport(formData: FormData) {
 
       if (!rpcError && nearbyReports && nearbyReports.length > 0) {
         // Exclude the currently inserted report itself
-        const others = nearbyReports.filter((r: any) => r.id !== insertData.id);
+        const others = nearbyReports.filter((r: { id: string, ai_category: string }) => r.id !== insertData.id);
         
         if (others.length > 0) {
           const closest = others[0];
@@ -94,8 +96,8 @@ export async function submitReport(formData: FormData) {
 
     return { success: true, data: insertData, message: "Report submitted successfully." };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Submit Report Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

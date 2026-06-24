@@ -1,0 +1,139 @@
+'use client';
+
+import { useState } from 'react';
+import { loginCitizen, registerCitizen } from '@/app/actions/auth';
+import { Button } from '@/components/ui/button';
+import { Loader2, Fingerprint } from 'lucide-react';
+
+export default function CitizenLogin() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [aadhar, setAadhar] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    if (aadhar.length !== 12 || isNaN(Number(aadhar))) {
+      setError("Please enter a valid 12-digit Aadhar number.");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!isLogin && password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isLogin) {
+      const res = await loginCitizen(aadhar, password);
+      if (!res.success) {
+        setError(res.error || 'Failed to login');
+        setIsSubmitting(false);
+      } else {
+        window.location.reload();
+      }
+    } else {
+      // Simulate Aadhar Verification delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const res = await registerCitizen(aadhar, password);
+      if (!res.success) {
+        setError(res.error || 'Failed to register');
+        setIsSubmitting(false);
+      } else {
+        window.location.reload();
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full mx-auto space-y-6">
+      <div className="text-center">
+        <Fingerprint className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-1">{isLogin ? 'Citizen Login' : 'Citizen Sign Up'}</h2>
+        <p className="text-slate-400 text-sm">{isLogin ? 'Welcome back! Log in to report issues or check status.' : 'Verify your Aadhar and create a password.'}</p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-200">Aadhar Card Number</label>
+          <input 
+            type="text"
+            maxLength={12}
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg tracking-widest text-center font-mono"
+            placeholder="XXXX XXXX XXXX"
+            value={aadhar}
+            onChange={(e) => setAadhar(e.target.value)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-200">Password</label>
+          <input 
+            type="password"
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg text-center font-mono"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        {!isLogin && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-200">Confirm Password</label>
+            <input 
+              type="password"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg text-center font-mono"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm text-center">
+          {error}
+        </div>
+      )}
+
+      <Button 
+        type="submit" 
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl font-semibold text-lg transition-all active:scale-[0.98]"
+        disabled={isSubmitting || aadhar.length < 12 || password.length < 6}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            {isLogin ? 'Authenticating...' : 'Verifying Aadhar...'}
+          </>
+        ) : (
+          isLogin ? 'Login' : 'Verify & Register'
+        )}
+      </Button>
+
+      <div className="text-center pt-2">
+        <button 
+          type="button" 
+          onClick={() => { setIsLogin(!isLogin); setError(null); }} 
+          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          {isLogin ? "Don't have an account? Sign Up" : "Already registered? Log In"}
+        </button>
+      </div>
+    </form>
+  );
+}
