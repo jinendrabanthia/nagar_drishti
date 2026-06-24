@@ -89,8 +89,8 @@ export default async function Home() {
         </div>
       </main>
 
-      <footer className="max-w-6xl mx-auto px-6 py-8 border-t border-white/[0.06] mt-auto">
-        <p>Built for the Vibe2Ship Hackathon. <span className="text-slate-500">Built by Jinendra Banthia.</span></p>
+      <footer className="border-t border-white/[0.04] py-6 text-center text-slate-600 text-sm">
+        <p>Built for Vibe2Ship Hackathon by Jinendra Banthia. <span className="text-slate-500">Secured by design.</span></p>
       </footer>
     </div>
   );
