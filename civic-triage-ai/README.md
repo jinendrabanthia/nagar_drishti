@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CivicTriage AI
 
-## Getting Started
+CivicTriage AI is a modern, AI-powered platform for reporting, triaging, and resolving city infrastructure issues. Built for GovTech, it leverages Google's Gemini AI to instantly analyze citizen reports, score their severity, and route them to the appropriate city department—saving thousands of hours of manual triage time.
 
-First, run the development server:
+## 🌟 Features
 
+### For Citizens
+* **Secure Aadhar Registration:** Citizens can create accounts using their 12-digit Aadhar number securely.
+* **Instant Reporting:** Report potholes, graffiti, hazards, and infrastructure damage by taking a photo.
+* **Interactive Mapping:** Select exact report locations on a live Leaflet map. Includes Pin Code auto-centering for rapid geographical lookup.
+* **My Reports Tracking:** A dedicated dashboard for citizens to track the real-time status of their past issues.
+
+### For City Officials
+* **Command Center Access:** Secure login gateway utilizing unique Special ID passes (e.g., `CITY-ADMIN-2026`).
+* **AI Triaging Engine:** Google Gemini AI automatically processes every image uploaded to:
+  - Categorize the issue (e.g., "Road Hazard", "Sanitation").
+  - Assign a Severity Score (0-100).
+  - Provide a justification and suggest the correct department.
+* **Live Incident Map:** View all active issues securely on an interactive PostGIS-powered geographic map.
+* **Kanban Workflow:** Quickly drag, drop, and manage incoming tasks.
+
+## 🛠 Tech Stack
+
+* **Frontend:** Next.js 14 (App Router), React, Tailwind CSS
+* **Backend:** Next.js Server Actions, Node.js
+* **Database & Storage:** Supabase (PostgreSQL with PostGIS for spatial mapping), Supabase Storage
+* **Authentication:** Next.js Cookies & custom `bcryptjs` encryption, Row Level Security (RLS)
+* **AI Integration:** `@google/genai` (Gemini 2.5 Flash API)
+* **Mapping:** `react-leaflet`, OpenStreetMap API
+
+## 🚀 Setup & Installation
+
+### 1. Clone the Repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/jinendrabanthia/civic_triage.git
+cd civic_triage/civic-triage-ai
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment Setup
+Create a `.env.local` file in the root of the project using `.env.example` as a template:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GEMINI_API_KEY=your_google_gemini_api_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Database Setup (Supabase)
+This project uses PostGIS for geographic lookups.
+1. Log into your Supabase project.
+2. Go to the SQL Editor.
+3. Open `supabase_schema.sql` and run the entire script. This will:
+   - Create the `reports`, `citizens`, and `officials` tables.
+   - Configure Row Level Security (RLS).
+   - Create the `get_reports_within_radius` RPC function.
+4. Go to **Storage** in Supabase and create a public bucket named `report-images`.
 
-## Learn More
+### 5. Start the Development Server
+```bash
+npm run dev
+```
+Navigate to `http://localhost:3000` to start exploring.
 
-To learn more about Next.js, take a look at the following resources:
+## 🧪 Testing Credentials
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* **City Official ID Pass**: `CITY-ADMIN-2026`
+* **Citizen Account**: Enter any 12-digit number (e.g. `123412341234`) under "Sign Up" to create a new profile.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Built for the 2026 GovTech Hackathon.
