@@ -85,4 +85,4 @@ Navigate to `http://localhost:3000` to start exploring.
 * **Offline Mode**: To test Field Ops, navigate to `/field-ops`, click "Cache Tasks", then disconnect your network (or use Chrome DevTools Offline throttling) and attempt to resolve a task.
 
 ---
-Built for the 2026 GovTech Hackathon.
+Built for the Vibe2Ship Hackathon by Jinendra Banthia.
