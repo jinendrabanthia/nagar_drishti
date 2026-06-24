@@ -1,6 +1,11 @@
 -- 1. Enable PostGIS extension for spatial queries
 create extension if not exists postgis with schema extensions;
 
+-- Drop existing tables so you can run this script cleanly
+drop table if exists public.reports cascade;
+drop table if exists public.citizens cascade;
+drop table if exists public.officials cascade;
+
 -- NEW: Create citizens table
 create table public.citizens (
     id uuid default gen_random_uuid() primary key,
