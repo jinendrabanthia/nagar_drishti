@@ -240,5 +240,20 @@ values (
   'Maharashtra',
   'Mumbai',
   'seeded-admin',
-  'approved'
 ) on conflict (email) do nothing;
+
+-- ============================================================
+-- 12. SEED DATA: Default Citizen
+-- ============================================================
+-- Aadhar: 123412341234
+-- Password is 'admin123' hashed with bcrypt (10 rounds)
+insert into public.citizens (aadhar_hash, aadhar_last4, password_hash, is_aadhar_verified, state, city, preferred_language)
+values (
+  '66c782e8f95ba958f28adaae576c42a263c2449af416fb844499bef7fd41b2d0',
+  '1234',
+  '$2a$10$XQxBj6SZio/rL3R8mRqKNeVB8WgNiaKWjVMwSJ3Kx5RzxFCjXO9Wy',
+  true,
+  'Maharashtra',
+  'Mumbai',
+  'en'
+) on conflict (aadhar_hash) do nothing;

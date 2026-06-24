@@ -78,10 +78,23 @@ npm run dev
 ```
 Navigate to `http://localhost:3000` to start exploring.
 
-## 🧪 Testing
+## 🧪 Testing Credentials
 
-* **Official Login**: You can create an official account via `/official/register`. To bypass manual admin approval for testing, you may need to manually set your `verification_status` to `'approved'` in your Supabase `officials` table.
-* **Citizen Account**: Register directly from the homepage.
+To make testing easier, the database schema includes pre-created demo accounts for both an Official and a Citizen.
+
+### Official (Command Center)
+* **Login URL:** `/official/login`
+* **Email:** `admin@civictriage.gov.in`
+* **Password:** `admin123`
+* **Role:** City Admin (Mumbai, Maharashtra)
+
+### Citizen (Public App)
+* **Login URL:** `/` (Homepage)
+* **Aadhar Number:** `123412341234`
+* **Password:** `admin123`
+
+*Note: You can also register a new official via `/official/register` (requires manual DB approval) or a new citizen directly from the homepage.*
+
 * **Offline Mode**: To test Field Ops, navigate to `/field-ops`, click "Cache Tasks", then disconnect your network (or use Chrome DevTools Offline throttling) and attempt to resolve a task.
 
 ---
