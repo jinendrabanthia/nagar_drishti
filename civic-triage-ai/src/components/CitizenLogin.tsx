@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { loginCitizen, registerCitizen } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
-import { Loader2, Fingerprint } from 'lucide-react';
+import { Loader2, Fingerprint, Globe } from 'lucide-react';
 import { INDIAN_STATES, getCitiesForState } from '@/lib/india-states-cities';
 
 export default function CitizenLogin() {
@@ -69,24 +69,26 @@ export default function CitizenLogin() {
     }
   };
 
-  const inputClass = "w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm";
-  const selectClass = "w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer";
+  const inputClass = "w-full bg-white/[0.04] border border-white/[0.08] rounded-xl p-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-sm transition-all duration-200 hover:bg-white/[0.06]";
+  const selectClass = "w-full bg-white/[0.04] border border-white/[0.08] rounded-xl p-3.5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 text-sm appearance-none cursor-pointer transition-all duration-200 hover:bg-white/[0.06]";
 
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full mx-auto space-y-5">
+    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
       <div className="text-center">
-        <Fingerprint className="w-14 h-14 text-blue-500 mx-auto mb-3" />
-        <h2 className="text-2xl font-bold text-white mb-1">{isLogin ? 'Citizen Login' : 'Citizen Sign Up'}</h2>
-        <p className="text-slate-400 text-sm">{isLogin ? 'Welcome back! Log in to report issues or check status.' : 'Verify your Aadhar and create your account.'}</p>
+        <div className="w-14 h-14 civic-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-500/20">
+          <Fingerprint className="w-7 h-7 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+        <p className="text-slate-400 text-sm">{isLogin ? 'Log in with your Aadhar to report issues.' : 'Verify your identity to get started.'}</p>
       </div>
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-200">Aadhar Card Number</label>
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aadhar Card Number</label>
           <input 
             type="text"
             maxLength={12}
-            className={`${inputClass} tracking-widest text-center font-mono text-lg`}
+            className={`${inputClass} tracking-[0.25em] text-center font-mono text-lg`}
             placeholder="XXXX XXXX XXXX"
             value={aadhar}
             onChange={(e) => setAadhar(e.target.value)}
@@ -94,7 +96,7 @@ export default function CitizenLogin() {
         </div>
         
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-200">Password</label>
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
           <input 
             type="password"
             className={`${inputClass} text-center font-mono text-lg`}
@@ -107,7 +109,7 @@ export default function CitizenLogin() {
         {!isLogin && (
           <>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-200">Confirm Password</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Confirm Password</label>
               <input 
                 type="password"
                 className={`${inputClass} text-center font-mono text-lg`}
@@ -119,7 +121,7 @@ export default function CitizenLogin() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-200">State</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">State</label>
                 <select
                   className={selectClass}
                   value={state}
@@ -132,7 +134,7 @@ export default function CitizenLogin() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-200">City</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">City</label>
                 <select
                   className={selectClass}
                   value={city}
@@ -147,25 +149,27 @@ export default function CitizenLogin() {
               </div>
             </div>
 
-            <div className="space-y-1.5 mt-3">
-              <label className="text-sm font-medium text-slate-200">Preferred Language</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Globe size={12} /> Preferred Language
+              </label>
               <select
                 className={selectClass}
                 value={preferredLanguage}
                 onChange={(e) => setPreferredLanguage(e.target.value)}
               >
                 <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="bn">Bengali</option>
-                <option value="ta">Tamil</option>
-                <option value="te">Telugu</option>
-                <option value="kn">Kannada</option>
-                <option value="ml">Malayalam</option>
-                <option value="mr">Marathi</option>
-                <option value="gu">Gujarati</option>
-                <option value="or">Odia</option>
-                <option value="pa">Punjabi</option>
-                <option value="ur">Urdu</option>
+                <option value="hi">Hindi (हिन्दी)</option>
+                <option value="bn">Bengali (বাংলা)</option>
+                <option value="ta">Tamil (தமிழ்)</option>
+                <option value="te">Telugu (తెలుగు)</option>
+                <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                <option value="ml">Malayalam (മലയാളം)</option>
+                <option value="mr">Marathi (मराठी)</option>
+                <option value="gu">Gujarati (ગુજરાતી)</option>
+                <option value="or">Odia (ଓଡ଼ିଆ)</option>
+                <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                <option value="ur">Urdu (اردو)</option>
               </select>
             </div>
           </>
@@ -173,20 +177,20 @@ export default function CitizenLogin() {
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm text-center">
+        <div className="bg-[#C2410C]/10 border border-[#C2410C]/30 text-[#EA580C] p-3 rounded-xl text-sm text-center">
           {error}
         </div>
       )}
 
       <Button 
         type="submit" 
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl font-semibold text-lg transition-all active:scale-[0.98]"
+        className="w-full civic-gradient hover:opacity-90 text-white py-6 rounded-xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg shadow-teal-600/20 civic-pulse"
         disabled={isSubmitting || aadhar.length < 12 || password.length < 6}
       >
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            {isLogin ? 'Authenticating...' : 'Verifying Aadhar...'}
+            {isLogin ? 'Authenticating...' : 'Securing your identity...'}
           </>
         ) : (
           isLogin ? 'Login' : 'Verify & Register'
@@ -197,7 +201,7 @@ export default function CitizenLogin() {
         <button 
           type="button" 
           onClick={() => { setIsLogin(!isLogin); setError(null); }} 
-          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
         >
           {isLogin ? "Don't have an account? Sign Up" : "Already registered? Log In"}
         </button>

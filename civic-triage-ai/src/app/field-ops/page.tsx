@@ -101,63 +101,75 @@ export default function FieldOpsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#0B1120] text-slate-50 flex flex-col font-sans">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900 p-4 sticky top-0 z-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <NextLink href="/official" className="text-slate-400 hover:text-white transition-colors">
-            <ArrowLeft size={20} />
+      <header className="border-b border-white/[0.06] bg-[#0B1120]/80 backdrop-blur-xl p-4 sticky top-0 z-40 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
+          <NextLink href="/official" className="text-slate-400 hover:text-[#EA580C] transition-colors p-2 bg-white/[0.04] rounded-lg border border-white/[0.06] hover:bg-white/[0.08]">
+            <ArrowLeft size={18} />
           </NextLink>
           <div className="flex items-center gap-2">
-            <ShieldAlert className="text-orange-500" />
-            <h1 className="text-xl font-bold">Field Ops</h1>
+            <div className="bg-gradient-to-br from-[#EA580C] to-[#C2410C] p-1.5 rounded-lg shadow-lg shadow-[#EA580C]/20">
+              <ShieldAlert size={18} className="text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-white">Field Ops Offline</h1>
           </div>
         </div>
 
         {/* Network & Sync Status */}
-        <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${isOnline ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
-            {isOnline ? <><Wifi size={14} /> ONLINE</> : <><WifiOff size={14} /> OFFLINE</>}
+        <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider uppercase border ${isOnline ? 'bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+            {isOnline ? <><Wifi size={14} /> Online</> : <><WifiOff size={14} /> Offline</>}
           </div>
           
           {pendingCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider uppercase bg-[#D97706]/10 text-[#D97706] border border-[#D97706]/20">
               <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
-              {pendingCount} PENDING SYNC
+              {pendingCount} Pending Sync
             </div>
           )}
 
           <button 
             onClick={downloadTasks} 
             disabled={!isOnline || isDownloading}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] disabled:opacity-50 transition-all active:scale-[0.98] whitespace-nowrap text-white"
           >
-            {isDownloading ? <RefreshCw size={14} className="animate-spin" /> : <HardDriveDownload size={14} />}
-            CACHE TASKS
+            {isDownloading ? <RefreshCw size={14} className="animate-spin text-[#14B8A6]" /> : <HardDriveDownload size={14} className="text-[#14B8A6]" />}
+            Cache Tasks
           </button>
         </div>
       </header>
 
       {/* Warning Banner when Offline */}
       {!isOnline && (
-        <div className="bg-amber-600 text-amber-50 px-4 py-2 text-sm font-medium text-center shadow-md">
-          You are currently offline. Changes will be saved locally and synced automatically when connection is restored.
+        <div className="bg-[#EA580C]/20 border-b border-[#EA580C]/40 text-[#EA580C] px-4 py-2 text-xs font-medium text-center uppercase tracking-widest shadow-inner backdrop-blur-md">
+          Offline Mode Active — Changes will sync automatically
         </div>
       )}
 
-      <main className="flex-1 p-4 max-w-3xl mx-auto w-full">
+      <main className="flex-1 p-4 max-w-3xl mx-auto w-full relative">
+        <div className="absolute top-1/4 -right-32 w-64 h-64 bg-[#EA580C]/5 rounded-full blur-3xl pointer-events-none"></div>
+
         {lastSync && (
-          <p className="text-slate-500 text-xs font-mono text-center mb-6">Last cached: {lastSync}</p>
+          <p className="text-slate-500 text-xs font-mono text-center mb-6 bg-white/[0.02] py-1.5 rounded-lg w-fit mx-auto px-4 border border-white/[0.04]">
+            Last cached: {lastSync}
+          </p>
         )}
 
         {tasks.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
-            <ShieldAlert size={48} className="mx-auto mb-4 opacity-50" />
-            <p>No assigned tasks found.</p>
-            {isOnline && <p className="text-sm mt-2">Click "Cache Tasks" to download your assignments.</p>}
+          <div className="glass-card rounded-3xl p-12 text-center mt-12 border-dashed border-2 border-white/[0.1]">
+            <div className="w-16 h-16 bg-[#EA580C]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert className="w-8 h-8 text-[#EA580C]/50" />
+            </div>
+            <p className="text-lg font-bold text-white mb-2">No active assignments</p>
+            {isOnline ? (
+              <p className="text-sm text-slate-400">Click "Cache Tasks" to download your route for today.</p>
+            ) : (
+              <p className="text-sm text-slate-400">You are offline and have no cached tasks.</p>
+            )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             {tasks.map(task => (
               <FieldTaskCard key={task.id} task={task} onUpdate={checkPending} />
             ))}

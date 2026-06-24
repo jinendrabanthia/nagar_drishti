@@ -3,6 +3,10 @@
 import { supabase } from '@/lib/supabase';
 import { analyzeReportImage } from '@/lib/gemini';
 import { detectAndTranslate } from '@/lib/translate';
+import {
+  validateFileUpload, validateMagicBytes, sanitizeFileName, stripExifData,
+  fuzzLocation, rateLimitCheck, sanitizeUserInput, sanitizeForAIPrompt
+} from '@/lib/security';
 
 // Reverse geocode lat/lng to extract PIN code using OpenStreetMap Nominatim
 async function reverseGeocodeForPinCode(lat: number, lng: number): Promise<string | null> {
@@ -60,18 +64,53 @@ export async function submitReport(formData: FormData) {
       throw new Error("Missing required fields");
     }
 
+    // --- SECURITY: Rate limit (3 reports per 5 minutes per citizen) ---
+    const rl = rateLimitCheck(`submit:${citizenId}`, 3, 5 * 60 * 1000);
+    if (!rl.allowed) {
+      return { success: false, error: 'Too many reports submitted. Please wait a few minutes.' };
+    }
+
+    // --- SECURITY: Validate citizen exists ---
+    const { data: citizenCheck } = await supabase
+      .from('citizens')
+      .select('id, city')
+      .eq('id', citizenId)
+      .single();
+    if (!citizenCheck) {
+      return { success: false, error: 'Invalid citizen session.' };
+    }
+
+    // --- SECURITY: Validate file upload ---
+    const fileValidation = validateFileUpload(file);
+    if (!fileValidation.valid) {
+      return { success: false, error: fileValidation.error };
+    }
+    const magicValidation = await validateMagicBytes(file);
+    if (!magicValidation.valid) {
+      return { success: false, error: magicValidation.error };
+    }
+
     const lat = parseFloat(latStr);
     const lng = parseFloat(lngStr);
 
-    // 1. Convert image to base64 for Gemini
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return { success: false, error: 'Invalid coordinates.' };
+    }
+
+    // --- SECURITY: Strip EXIF metadata from image ---
     const arrayBuffer = await file.arrayBuffer();
-    const base64Image = Buffer.from(arrayBuffer).toString('base64');
+    const rawBuffer = Buffer.from(arrayBuffer);
+    const cleanBuffer = stripExifData(rawBuffer, file.type);
+    const base64Image = cleanBuffer.toString('base64');
+
+    // --- SECURITY: Location fuzzing for privacy ---
+    const { displayLat, displayLng } = fuzzLocation(lat, lng);
     
-    // 2. Upload image to Supabase Storage
-    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+    // 2. Upload cleaned image to Supabase Storage
+    const fileName = `${Date.now()}-${sanitizeFileName(file.name)}`;
     const { error: uploadError } = await supabase.storage
       .from('report-images')
-      .upload(fileName, file, { contentType: file.type });
+      .upload(fileName, cleanBuffer, { contentType: file.type });
 
     if (uploadError) {
       console.error("Supabase storage error:", uploadError);
@@ -84,10 +123,11 @@ export async function submitReport(formData: FormData) {
     const aiResult = await analyzeReportImage(base64Image, file.type);
 
     // 4. Auto-translate description if not English
+    const sanitizedDesc = sanitizeUserInput(description, 2000);
     let originalLanguage = 'en';
-    let descriptionTranslated = description;
-    if (description && description.trim().length > 0) {
-      const translationResult = await detectAndTranslate(description);
+    let descriptionTranslated = sanitizedDesc;
+    if (sanitizedDesc && sanitizedDesc.trim().length > 0) {
+      const translationResult = await detectAndTranslate(sanitizedDesc);
       originalLanguage = translationResult.original_language;
       descriptionTranslated = translationResult.translated_text;
     }
@@ -96,13 +136,7 @@ export async function submitReport(formData: FormData) {
     const pinCode = await reverseGeocodeForPinCode(lat, lng);
 
     // 6. Get citizen's city for fallback routing
-    let citizenCity: string | undefined;
-    const { data: citizen } = await supabase
-      .from('citizens')
-      .select('city')
-      .eq('id', citizenId)
-      .single();
-    citizenCity = citizen?.city;
+    const citizenCity = citizenCheck.city;
 
     // 7. Find assigned official
     let assignedTo: string | null = null;
@@ -125,8 +159,10 @@ export async function submitReport(formData: FormData) {
       location: `POINT(${lng} ${lat})`,
       lat,
       lng,
+      display_lat: displayLat,
+      display_lng: displayLng,
       image_url: imageUrl,
-      description,
+      description: sanitizedDesc,
       original_language: originalLanguage,
       description_translated: originalLanguage !== 'en' ? descriptionTranslated : null,
       ai_category: aiResult.issue_category,
@@ -159,7 +195,7 @@ export async function submitReport(formData: FormData) {
       throw new Error("Failed to save report to database");
     }
 
-    // 9. Deduplication logic
+    // 9. Deduplication logic (uses exact coords, not display coords)
     if (insertData && !aiResult.is_prank_or_unrelated) {
       const { data: nearbyReports, error: rpcError } = await supabase.rpc('get_reports_within_radius', {
         query_lat: lat,

@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
+import { rateLimitCheck, sanitizeUserInput, validateFileUpload, validateMagicBytes, sanitizeFileName } from '@/lib/security';
 
 // ============================================================
 // CITIZEN AUTH
@@ -15,6 +16,7 @@ export async function registerCitizen(
   city: string,
   preferredLanguage: string = 'en'
 ) {
+  // --- Input Validation ---
   if (!aadharNumber || aadharNumber.trim().length !== 12 || isNaN(Number(aadharNumber))) {
     return { success: false, error: 'A valid 12-digit Aadhar number is required' };
   }
@@ -25,29 +27,47 @@ export async function registerCitizen(
     return { success: false, error: 'State and City are required' };
   }
 
-  try {
-    const { data: existingCitizen } = await supabase
-      .from('citizens')
-      .select('id')
-      .eq('aadhar_number', aadharNumber)
-      .single();
+  // --- Rate Limit (3 registrations per hour per Aadhar prefix) ---
+  const rlKey = `register:${aadharNumber.slice(0, 6)}`;
+  const rl = rateLimitCheck(rlKey, 3, 60 * 60 * 1000);
+  if (!rl.allowed) {
+    return { success: false, error: 'Too many registration attempts. Please try again later.' };
+  }
 
-    if (existingCitizen) {
-      return { success: false, error: 'Aadhar number is already registered. Please log in.' };
+  try {
+    // Hash Aadhar for storage (never store plaintext)
+    const aadharSalt = await bcrypt.genSalt(10);
+    const aadharHash = await bcrypt.hash(aadharNumber, aadharSalt);
+    const aadharLast4 = aadharNumber.slice(-4);
+
+    // Check if already registered (need to check all hashes - expensive but secure)
+    const { data: allCitizens } = await supabase
+      .from('citizens')
+      .select('id, aadhar_hash');
+
+    if (allCitizens) {
+      for (const c of allCitizens) {
+        if (await bcrypt.compare(aadharNumber, c.aadhar_hash)) {
+          return { success: false, error: 'Aadhar number is already registered. Please log in.' };
+        }
+      }
     }
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(passwordStr, salt);
 
+    // Insert citizen — role is ALWAYS citizen, never accepts role from client
     const { data: newCitizen, error } = await supabase
       .from('citizens')
       .insert([{
-        aadhar_number: aadharNumber,
+        aadhar_hash: aadharHash,
+        aadhar_last4: aadharLast4,
         password_hash: passwordHash,
         is_aadhar_verified: true,
-        state,
-        city,
-        preferred_language: preferredLanguage,
+        state: sanitizeUserInput(state, 100),
+        city: sanitizeUserInput(city, 100),
+        preferred_language: ['en','hi','bn','ta','te','kn','ml','mr','gu','or','pa','ur'].includes(preferredLanguage) ? preferredLanguage : 'en',
       }])
       .select()
       .single();
@@ -57,6 +77,7 @@ export async function registerCitizen(
     (await cookies()).set('citizen_id', newCitizen.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7,
       path: '/'
     });
@@ -73,25 +94,44 @@ export async function loginCitizen(aadharNumber: string, passwordStr: string) {
     return { success: false, error: 'Aadhar number and password are required' };
   }
 
-  try {
-    const { data: citizen, error } = await supabase
-      .from('citizens')
-      .select('id, password_hash')
-      .eq('aadhar_number', aadharNumber)
-      .single();
+  // --- Rate Limit (5 login attempts per minute) ---
+  const rlKey = `login:citizen:${aadharNumber.slice(0, 6)}`;
+  const rl = rateLimitCheck(rlKey, 5, 60 * 1000);
+  if (!rl.allowed) {
+    return { success: false, error: 'Too many login attempts. Please wait a minute.' };
+  }
 
-    if (error || !citizen) {
+  try {
+    // Find citizen by comparing aadhar hashes
+    const { data: allCitizens } = await supabase
+      .from('citizens')
+      .select('id, aadhar_hash, password_hash');
+
+    if (!allCitizens) {
       return { success: false, error: 'Invalid Aadhar number or password' };
     }
 
-    const isMatch = await bcrypt.compare(passwordStr, citizen.password_hash);
+    let matchedCitizen = null;
+    for (const c of allCitizens) {
+      if (await bcrypt.compare(aadharNumber, c.aadhar_hash)) {
+        matchedCitizen = c;
+        break;
+      }
+    }
+
+    if (!matchedCitizen) {
+      return { success: false, error: 'Invalid Aadhar number or password' };
+    }
+
+    const isMatch = await bcrypt.compare(passwordStr, matchedCitizen.password_hash);
     if (!isMatch) {
       return { success: false, error: 'Invalid Aadhar number or password' };
     }
 
-    (await cookies()).set('citizen_id', citizen.id, {
+    (await cookies()).set('citizen_id', matchedCitizen.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7,
       path: '/'
     });
@@ -108,11 +148,11 @@ export async function loginCitizen(aadharNumber: string, passwordStr: string) {
 // ============================================================
 
 export async function registerOfficial(formData: FormData) {
-  const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
+  const name = sanitizeUserInput(formData.get('name') as string, 200);
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
   const passwordStr = formData.get('password') as string;
-  const state = formData.get('state') as string;
-  const city = formData.get('city') as string;
+  const state = sanitizeUserInput(formData.get('state') as string, 100);
+  const city = sanitizeUserInput(formData.get('city') as string, 100);
   const idCard = formData.get('id_card') as File;
 
   if (!name || !email || !passwordStr || !state || !city) {
@@ -123,6 +163,22 @@ export async function registerOfficial(formData: FormData) {
   }
   if (!idCard || idCard.size === 0) {
     return { success: false, error: 'Government ID card image is required' };
+  }
+
+  // --- Validate file upload ---
+  const fileValidation = validateFileUpload(idCard);
+  if (!fileValidation.valid) {
+    return { success: false, error: fileValidation.error };
+  }
+  const magicValidation = await validateMagicBytes(idCard);
+  if (!magicValidation.valid) {
+    return { success: false, error: magicValidation.error };
+  }
+
+  // --- Rate Limit ---
+  const rl = rateLimitCheck(`register:official:${email}`, 3, 60 * 60 * 1000);
+  if (!rl.allowed) {
+    return { success: false, error: 'Too many registration attempts. Please try again later.' };
   }
 
   try {
@@ -137,9 +193,9 @@ export async function registerOfficial(formData: FormData) {
       return { success: false, error: 'This email is already registered. Please log in.' };
     }
 
-    // Upload ID card
-    const sanitizedName = idCard.name.replace(/[^a-zA-Z0-9.]/g, '');
-    const fileName = `${Date.now()}-${sanitizedName}`;
+    // Upload ID card to PRIVATE bucket (no public URL!)
+    const safeFileName = sanitizeFileName(idCard.name);
+    const fileName = `${Date.now()}-${safeFileName}`;
     const { error: uploadError } = await supabase.storage
       .from('official-id-cards')
       .upload(fileName, idCard, { contentType: idCard.type });
@@ -149,13 +205,14 @@ export async function registerOfficial(formData: FormData) {
       return { success: false, error: 'Failed to upload ID card' };
     }
 
-    const idCardUrl = supabase.storage.from('official-id-cards').getPublicUrl(fileName).data.publicUrl;
+    // Store just the path, NOT a public URL. Admins use signed URLs to view.
+    const idCardPath = fileName;
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(passwordStr, salt);
 
-    // Insert official with pending status
+    // Insert official — role is ALWAYS pending, never accepts status from client
     const { error: insertError } = await supabase
       .from('officials')
       .insert([{
@@ -164,8 +221,8 @@ export async function registerOfficial(formData: FormData) {
         password_hash: passwordHash,
         state,
         city,
-        id_card_url: idCardUrl,
-        verification_status: 'pending',
+        id_card_path: idCardPath,
+        verification_status: 'pending', // ALWAYS pending — admin must approve
       }]);
 
     if (insertError) {
@@ -185,11 +242,17 @@ export async function loginOfficial(email: string, passwordStr: string) {
     return { success: false, error: 'Email and password are required' };
   }
 
+  // --- Rate Limit ---
+  const rl = rateLimitCheck(`login:official:${email}`, 5, 60 * 1000);
+  if (!rl.allowed) {
+    return { success: false, error: 'Too many login attempts. Please wait a minute.' };
+  }
+
   try {
     const { data: official, error } = await supabase
       .from('officials')
       .select('id, name, password_hash, verification_status')
-      .eq('email', email)
+      .eq('email', email.trim().toLowerCase())
       .single();
 
     if (error || !official) {
@@ -212,6 +275,7 @@ export async function loginOfficial(email: string, passwordStr: string) {
     (await cookies()).set('official_session', official.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24,
       path: '/'
     });

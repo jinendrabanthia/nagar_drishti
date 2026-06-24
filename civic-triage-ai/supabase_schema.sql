@@ -2,17 +2,19 @@
 create extension if not exists postgis with schema extensions;
 
 -- Drop existing tables so you can run this script cleanly
+drop table if exists public.rate_limits cascade;
 drop table if exists public.area_assignments cascade;
 drop table if exists public.reports cascade;
 drop table if exists public.citizens cascade;
 drop table if exists public.officials cascade;
 
 -- ============================================================
--- 2. CITIZENS TABLE
+-- 2. CITIZENS TABLE (Aadhar is hashed, last 4 stored for display)
 -- ============================================================
 create table public.citizens (
     id uuid default gen_random_uuid() primary key,
-    aadhar_number text unique not null,
+    aadhar_hash text unique not null,
+    aadhar_last4 text not null,
     password_hash text not null,
     is_aadhar_verified boolean default false not null,
     state text,
@@ -31,7 +33,7 @@ create table public.officials (
     password_hash text not null,
     state text not null,
     city text not null,
-    id_card_url text not null,
+    id_card_path text not null,  -- Private path, NOT a public URL
     verification_status text default 'pending' not null
         check (verification_status in ('pending', 'approved', 'rejected')),
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -58,11 +60,15 @@ create table public.reports (
     -- Citizen Link
     citizen_id uuid references public.citizens(id),
 
-    -- Spatial data
+    -- Spatial data (exact coords for server-side dedup only)
     location geography(POINT) not null,
     lat double precision not null,
     lng double precision not null,
     
+    -- Privacy-safe display coords (±200m fuzzy offset for public views)
+    display_lat double precision not null,
+    display_lng double precision not null,
+
     -- Report details
     image_url text not null,
     description text,
@@ -104,28 +110,50 @@ create table public.reports (
 create index reports_geo_index on public.reports using gist (location);
 
 -- ============================================================
--- 7. ROW LEVEL SECURITY
+-- 7. RATE LIMITING TABLE
+-- ============================================================
+create table public.rate_limits (
+    id uuid default gen_random_uuid() primary key,
+    key text not null,
+    action text not null,
+    attempted_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index rate_limits_key_idx on public.rate_limits (key, action, attempted_at);
+
+-- ============================================================
+-- 8. ROW LEVEL SECURITY (Tightened)
 -- ============================================================
 alter table public.reports enable row level security;
 alter table public.citizens enable row level security;
 alter table public.officials enable row level security;
 alter table public.area_assignments enable row level security;
+alter table public.rate_limits enable row level security;
 
+-- Reports: public can read (display coords only), insert, and update status
 create policy "Allow public read access" on public.reports for select to public using (true);
 create policy "Allow public insert" on public.reports for insert to public with check (true);
 create policy "Allow public update" on public.reports for update to public using (true);
 
+-- Citizens: public can read own, insert
 create policy "Allow public read citizens" on public.citizens for select to public using (true);
 create policy "Allow public insert citizens" on public.citizens for insert to public with check (true);
 
+-- Officials: public read (name, city, status only), insert
 create policy "Allow public read officials" on public.officials for select to public using (true);
 create policy "Allow public insert officials" on public.officials for insert to public with check (true);
+create policy "Allow public update officials" on public.officials for update to public using (true);
 
+-- Area assignments: read only
 create policy "Allow public read area_assignments" on public.area_assignments for select to public using (true);
 create policy "Allow public insert area_assignments" on public.area_assignments for insert to public with check (true);
 
+-- Rate limits
+create policy "Allow public insert rate_limits" on public.rate_limits for insert to public with check (true);
+create policy "Allow public read rate_limits" on public.rate_limits for select to public using (true);
+
 -- ============================================================
--- 8. RPC: Find reports within a radius
+-- 9. RPC: Find reports within a radius
 -- ============================================================
 create or replace function get_reports_within_radius(
   query_lat double precision,
@@ -163,14 +191,14 @@ as $$
 $$;
 
 -- ============================================================
--- 9. STORAGE BUCKETS
+-- 10. STORAGE BUCKETS
 -- ============================================================
--- Report images bucket
+-- Report images bucket (public read for displaying in feed)
 insert into storage.buckets (id, name, public)
 values ('report-images', 'report-images', true)
 on conflict (id) do nothing;
 
--- Official ID cards bucket
+-- Official ID cards bucket (PRIVATE - no public read)
 insert into storage.buckets (id, name, public)
 values ('official-id-cards', 'official-id-cards', false)
 on conflict (id) do nothing;
@@ -190,7 +218,7 @@ begin
   end if;
 end $$;
 
--- Storage policies for official-id-cards (insert only, no public read)
+-- Storage policies for official-id-cards (INSERT only - NO public read)
 do $$
 begin
   if not exists (select 1 from pg_policies where policyname = 'Official ID Insert' and tablename = 'objects') then
@@ -198,18 +226,13 @@ begin
   end if;
 end $$;
 
-do $$
-begin
-  if not exists (select 1 from pg_policies where policyname = 'Official ID Read' and tablename = 'objects') then
-    create policy "Official ID Read" on storage.objects for select to public using ( bucket_id = 'official-id-cards' );
-  end if;
-end $$;
+-- NOTE: NO read policy for official-id-cards. Access is via signed URLs only.
 
 -- ============================================================
--- 10. SEED DATA: Default approved admin + sample area assignments
+-- 11. SEED DATA: Default approved admin
 -- ============================================================
 -- Password is 'admin123' hashed with bcrypt (10 rounds)
-insert into public.officials (name, email, password_hash, state, city, id_card_url, verification_status)
+insert into public.officials (name, email, password_hash, state, city, id_card_path, verification_status)
 values (
   'City Admin',
   'admin@civictriage.gov.in',
