@@ -112,3 +112,11 @@ as $$
   order by
     distance_meters asc;
 $$;
+
+-- 6. Storage Setup (Create bucket and policies for image uploads)
+insert into storage.buckets (id, name, public)
+values ('report-images', 'report-images', true)
+on conflict (id) do nothing;
+
+create policy "Public Access" on storage.objects for select to public using ( bucket_id = 'report-images' );
+create policy "Public Insert" on storage.objects for insert to public with check ( bucket_id = 'report-images' );
