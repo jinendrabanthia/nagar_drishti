@@ -2,30 +2,34 @@
 
 CivicTriage AI is a modern, AI-powered platform for reporting, triaging, and resolving city infrastructure issues. Built for GovTech, it leverages Google's Gemini AI to instantly analyze citizen reports, score their severity, and route them to the appropriate city department—saving thousands of hours of manual triage time.
 
-## 🌟 Features
+The platform utilizes a bespoke **Civic Modernism** design language featuring deep navy backgrounds, civic teal accents, glassmorphic cards, and dynamic UI micro-interactions for a premium, accessible user experience.
+
+## 🌟 Advanced Features
 
 ### For Citizens
-* **Secure Aadhar Registration:** Citizens can create accounts using their 12-digit Aadhar number securely.
-* **Instant Reporting:** Report potholes, graffiti, hazards, and infrastructure damage by taking a photo.
-* **Interactive Mapping:** Select exact report locations on a live Leaflet map. Includes Pin Code auto-centering for rapid geographical lookup.
-* **My Reports Tracking:** A dedicated dashboard for citizens to track the real-time status of their past issues.
+* **Secure Registration:** Citizens can create accounts securely with privacy-preserving data handling (Aadhar hashing, location fuzzing).
+* **Instant Multilingual Reporting:** Report potholes, graffiti, and hazards. Speak or type in your native language—the AI automatically translates and standardizes reports for city officials.
+* **Voice-to-Text Accessibility:** Includes built-in Web Speech API integration to allow citizens to dictate their reports easily.
+* **Interactive Mapping:** Select exact report locations on a live Leaflet map with PIN Code auto-centering for rapid geographical lookup.
+* **My Reports Tracking & Timeline:** A dedicated, highly styled dashboard for tracking real-time status. Features an interactive **"Before & After" Transparency Slider** to view infrastructure improvements once an official resolves a ticket.
 
-### For City Officials
-* **Command Center Access:** Secure login gateway utilizing unique Special ID passes (e.g., `CITY-ADMIN-2026`).
-* **AI Triaging Engine:** Google Gemini AI automatically processes every image uploaded to:
-  - Categorize the issue (e.g., "Road Hazard", "Sanitation").
-  - Assign a Severity Score (0-100).
-  - Provide a justification and suggest the correct department.
-* **Live Incident Map:** View all active issues securely on an interactive PostGIS-powered geographic map.
-* **Kanban Workflow:** Quickly drag, drop, and manage incoming tasks.
+### For City Officials (Command Center)
+* **Identity Verification:** Strict City Official onboarding path. Officials must upload Government ID cards which are securely stored in private cloud buckets with time-limited signed URL access. Accounts remain pending until admin approval.
+* **AI Triaging & Emergency Hazard Escalation:** Google Gemini AI automatically processes every image uploaded to:
+  - Categorize the issue and assign a Severity Score (0-100).
+  - Automatically detect life-threatening emergencies (live wires, sinkholes) and escalate them to Severity 100 with pulsing red UI alerts.
+* **Legacy System RPA Integration (GovNet95):** A dedicated RPA bridge generates normalized JSON payloads from AI triaged data. Features a visual simulator demonstrating automated data entry into legacy mainframe systems.
+* **Offline-First Field Operations:** Built for municipal workers in poor-connectivity areas. Workers can securely cache their assigned tasks, travel to the site, update statuses, upload resolution proof photos, and queue updates completely offline using Service Workers and IndexedDB.
+* **Automated Impact Reports:** One-click generation of executive summaries and metrics (labor hours saved, duplicates caught) using Gemini. The reports feature a clean print-ready CSS layout perfect for PDF exports for city councils.
 
 ## 🛠 Tech Stack
 
-* **Frontend:** Next.js 14 (App Router), React, Tailwind CSS
+* **Frontend:** Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons
 * **Backend:** Next.js Server Actions, Node.js
 * **Database & Storage:** Supabase (PostgreSQL with PostGIS for spatial mapping), Supabase Storage
-* **Authentication:** Next.js Cookies & custom `bcryptjs` encryption, Row Level Security (RLS)
+* **Security & Auth:** Next.js Cookies, `bcryptjs` encryption, Row Level Security (RLS), Data Fuzzing
 * **AI Integration:** `@google/genai` (Gemini 2.5 Flash API)
+* **Offline Capabilities:** Service Workers (`sw.js`), IndexedDB wrapper (`idb`)
 * **Mapping:** `react-leaflet`, OpenStreetMap API
 
 ## 🚀 Setup & Installation
@@ -49,26 +53,36 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GEMINI_API_KEY=your_google_gemini_api_key
 ```
 
-### 4. Database Setup (Supabase)
-This project uses PostGIS for geographic lookups.
+### 4. Database & Storage Setup (Supabase)
+This project uses PostGIS for geographic lookups and strict RLS for privacy.
 1. Log into your Supabase project.
 2. Go to the SQL Editor.
 3. Open `supabase_schema.sql` and run the entire script. This will:
    - Create the `reports`, `citizens`, and `officials` tables.
-   - Configure Row Level Security (RLS).
-   - Create the `get_reports_within_radius` RPC function.
-4. Go to **Storage** in Supabase and create a public bucket named `report-images`.
+   - Configure Row Level Security (RLS) for all tables.
+   - Create necessary RPC functions.
+4. Go to **Storage** in Supabase and ensure the creation of:
+   - `report-images` (Public bucket for citizen uploads)
+   - `official-id-cards` (Private bucket for official verification)
+   - `resolved-images` (Public bucket for resolution proof)
 
-### 5. Start the Development Server
+### 5. Seed Demo Data (Optional)
+To quickly populate the dashboard with realistic, localized reports:
+```bash
+npx tsx scripts/seed-demo-data.ts
+```
+
+### 6. Start the Development Server
 ```bash
 npm run dev
 ```
 Navigate to `http://localhost:3000` to start exploring.
 
-## 🧪 Testing Credentials
+## 🧪 Testing
 
-* **City Official ID Pass**: `CITY-ADMIN-2026`
-* **Citizen Account**: Enter any 12-digit number (e.g. `123412341234`) under "Sign Up" to create a new profile.
+* **Official Login**: You can create an official account via `/official/register`. To bypass manual admin approval for testing, you may need to manually set your `verification_status` to `'approved'` in your Supabase `officials` table.
+* **Citizen Account**: Register directly from the homepage.
+* **Offline Mode**: To test Field Ops, navigate to `/field-ops`, click "Cache Tasks", then disconnect your network (or use Chrome DevTools Offline throttling) and attempt to resolve a task.
 
 ---
 Built for the 2026 GovTech Hackathon.
