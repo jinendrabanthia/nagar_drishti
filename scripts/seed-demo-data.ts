@@ -1,5 +1,5 @@
 /**
- * CivicTriage AI — Demo Seed Script
+ * Nagar Drishti AI — Demo Seed Script
  * Run: npx tsx scripts/seed-demo-data.ts
  * 
  * Inserts 75 randomized reports across Mumbai with varied categories,
@@ -92,13 +92,13 @@ function randomDate(daysBack: number): string {
 }
 
 async function seed() {
-  console.log('🌱 Starting CivicTriage AI seed...\n');
+  console.log('🌱 Starting Nagar Drishti AI seed...\n');
 
   // 1. Get the seeded admin official
   const { data: admin } = await supabase
     .from('officials')
     .select('id')
-    .eq('email', 'admin@civictriage.gov.in')
+    .eq('email', 'admin@nagardrishti.gov.in')
     .single();
 
   if (!admin) {
@@ -169,7 +169,7 @@ async function seed() {
 
   console.log(`✅ Inserted 75 demo reports across Mumbai`);
   console.log('\n🎉 Seed complete! Your dashboard should now look vibrant.');
-  console.log('   Official login: admin@civictriage.gov.in / admin123');
+  console.log('   Official login: admin@nagardrishti.gov.in / admin123');
 }
 
 seed().catch(console.error);

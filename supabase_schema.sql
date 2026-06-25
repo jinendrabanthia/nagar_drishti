@@ -235,7 +235,7 @@ end $$;
 insert into public.officials (name, email, password_hash, state, city, id_card_path, verification_status)
 values (
   'City Admin',
-  'admin@civictriage.gov.in',
+  'admin@nagardrishti.gov.in',
   '$2a$10$XQxBj6SZio/rL3R8mRqKNeVB8WgNiaKWjVMwSJ3Kx5RzxFCjXO9Wy',
   'Maharashtra',
   'Mumbai',

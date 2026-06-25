@@ -56,7 +56,7 @@ export default async function MyReports() {
               <div className="civic-gradient p-1.5 rounded-lg">
                 <ShieldAlert size={18} className="text-white" />
               </div>
-              <span className="font-bold text-lg tracking-tight text-white">CivicTriage<span className="text-teal-400">.ai</span></span>
+              <span className="font-bold text-lg tracking-tight text-white">Nagar Drishti<span className="text-teal-400">.ai</span></span>
             </div>
           </div>
         </div>

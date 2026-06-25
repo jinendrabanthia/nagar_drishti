@@ -1,5 +1,5 @@
 /**
- * CivicTriage AI — Security Utilities
+ * Nagar Drishti AI — Security Utilities
  * Covers: file validation, EXIF stripping, location fuzzing,
  *         rate limiting, input sanitization, prompt injection defense.
  */

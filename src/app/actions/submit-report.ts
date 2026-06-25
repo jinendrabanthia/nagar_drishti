@@ -13,7 +13,7 @@ async function reverseGeocodeForPinCode(lat: number, lng: number): Promise<strin
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-      { headers: { 'User-Agent': 'CivicTriageAI/1.0' } }
+      { headers: { 'User-Agent': 'NagarDrishtiAI/1.0' } }
     );
     if (!res.ok) return null;
     const data = await res.json();

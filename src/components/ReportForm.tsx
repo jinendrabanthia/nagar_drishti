@@ -9,7 +9,7 @@ import NextLink from 'next/link';
 
 const Map = dynamic(() => import('@/components/Map'), { 
   ssr: false, 
-  loading: () => <div className="w-full h-full skeleton flex items-center justify-center text-slate-500 text-sm">Loading Map...</div> 
+  loading: () => <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-500 text-sm animate-pulse">Loading Map...</div> 
 });
 
 export default function ReportForm({ citizenId }: { citizenId: string }) {
@@ -97,16 +97,16 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
     return (
       <div className="p-6 md:p-8 space-y-5">
         <div className="text-center mb-6">
-          <Loader2 className="w-10 h-10 text-teal-400 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-bold text-white mb-1">AI Analyzing...</h3>
-          <p className="text-sm text-slate-400">Scanning image for hazards, classifying severity, and routing to the right department.</p>
+          <Loader2 className="w-10 h-10 text-teal-500 mx-auto mb-4 animate-spin" />
+          <h3 className="text-xl font-bold text-slate-900 mb-1">AI Analyzing...</h3>
+          <p className="text-sm text-slate-500">Scanning image for hazards, classifying severity, and routing to the right department.</p>
         </div>
         <div className="space-y-3">
-          <div className="skeleton h-4 w-3/4 rounded-lg"></div>
-          <div className="skeleton h-4 w-1/2 rounded-lg"></div>
-          <div className="skeleton h-20 w-full rounded-xl"></div>
-          <div className="skeleton h-4 w-2/3 rounded-lg"></div>
-          <div className="skeleton h-12 w-full rounded-xl"></div>
+          <div className="h-4 bg-slate-200 animate-pulse w-3/4 rounded-lg"></div>
+          <div className="h-4 bg-slate-200 animate-pulse w-1/2 rounded-lg"></div>
+          <div className="h-20 bg-slate-200 animate-pulse w-full rounded-xl"></div>
+          <div className="h-4 bg-slate-200 animate-pulse w-2/3 rounded-lg"></div>
+          <div className="h-12 bg-slate-200 animate-pulse w-full rounded-xl"></div>
         </div>
       </div>
     );
@@ -116,35 +116,35 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
     return (
       <div className="p-8 text-center">
         {result.duplicateOf ? (
-          <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100">
             <AlertTriangle className="w-8 h-8 text-amber-500" />
           </div>
         ) : (
-          <div className="w-16 h-16 bg-teal-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-teal-400" />
+          <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-teal-100">
+            <CheckCircle className="w-8 h-8 text-teal-500" />
           </div>
         )}
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-900 mb-2">
           {result.duplicateOf ? 'Duplicate Detected' : 'Report Received!'}
         </h3>
-        <p className="text-slate-400 mb-6">{result.message}</p>
+        <p className="text-slate-600 mb-6">{result.message}</p>
         {result.data && (
-          <div className="glass-card rounded-xl p-4 text-left mb-6 text-sm space-y-2">
-            <p className="text-slate-300"><span className="font-semibold text-white">AI Category:</span> {result.data.ai_category}</p>
-            <p className="text-slate-300">
-              <span className="font-semibold text-white">Severity:</span>{' '}
-              <span className={result.data.ai_severity > 80 ? 'text-[#EA580C] font-bold' : result.data.ai_severity > 50 ? 'text-amber-400 font-bold' : 'text-teal-400 font-bold'}>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left mb-6 text-sm space-y-2">
+            <p className="text-slate-600"><span className="font-semibold text-slate-900">AI Category:</span> {result.data.ai_category}</p>
+            <p className="text-slate-600">
+              <span className="font-semibold text-slate-900">Severity:</span>{' '}
+              <span className={result.data.ai_severity > 80 ? 'text-orange-600 font-bold' : result.data.ai_severity > 50 ? 'text-amber-500 font-bold' : 'text-teal-600 font-bold'}>
                 {result.data.ai_severity}/100
               </span>
             </p>
-            <p className="text-slate-400 italic text-xs mt-2 border-t border-white/[0.06] pt-2">&quot;{result.data.ai_justification}&quot;</p>
+            <p className="text-slate-500 italic text-xs mt-2 border-t border-slate-200 pt-2">&quot;{result.data.ai_justification}&quot;</p>
           </div>
         )}
         <div className="flex gap-3">
-          <Button onClick={() => window.location.reload()} className="flex-1 glass-card hover:bg-white/[0.08] text-white border-0">
+          <Button onClick={() => window.location.reload()} className="flex-1 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm">
             Submit Another
           </Button>
-          <NextLink href="/my-reports" className="flex-1 flex items-center justify-center rounded-xl civic-gradient text-white font-semibold text-sm transition-all active:scale-[0.98] shadow-lg shadow-teal-600/20">
+          <NextLink href="/my-reports" className="flex-1 flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-semibold text-sm transition-all active:scale-[0.98] shadow-md shadow-teal-500/20">
             Track My Reports
           </NextLink>
         </div>
@@ -155,47 +155,47 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
   return (
     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-white mb-1">Report an Issue</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Report an Issue</h2>
         <p className="text-slate-500 text-sm">Help keep our city safe. Your location is privacy-protected.</p>
       </div>
 
       {/* Security Badge */}
-      <div className="flex items-center gap-2 glass-card px-3 py-2 rounded-lg text-xs text-slate-400">
-        <Shield size={12} className="text-teal-400" />
-        <span>EXIF metadata stripped • Location fuzzy by ±200m • File validated</span>
+      <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 px-3 py-2 rounded-lg text-xs text-teal-700">
+        <Shield size={14} className="text-teal-600" />
+        <span className="font-medium">EXIF stripped • Location fuzzed ±200m • Verified</span>
       </div>
 
       {/* Map Section */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <MapPin size={12} /> Pin the Location
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+          <MapPin size={14} /> Pin the Location
         </label>
-        <div className="h-48 rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.02] relative z-0">
+        <div className="h-48 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 relative z-0 shadow-inner">
           <Map onLocationSelect={(lat, lng) => { setLat(lat); setLng(lng); }} />
         </div>
         {lat && lng && (
-          <p className="text-xs text-teal-400 font-mono">📍 Location captured (privacy-protected)</p>
+          <p className="text-xs text-teal-600 font-mono font-medium">📍 Location captured securely</p>
         )}
       </div>
 
       {/* Photo Section */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <Camera size={12} /> Upload Photo Evidence
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+          <Camera size={14} /> Upload Photo Evidence
         </label>
         <div 
           onClick={() => fileInputRef.current?.click()}
-          className={`h-32 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 ${preview ? 'border-teal-500/50 bg-teal-500/5' : 'border-white/[0.08] hover:border-teal-500/30 bg-white/[0.02]'}`}
+          className={`h-36 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 ${preview ? 'border-teal-400 bg-teal-50/50' : 'border-slate-300 hover:border-teal-400 hover:bg-teal-50/30 bg-slate-50'}`}
         >
           {preview ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview} alt="Preview" className="h-full w-full object-cover rounded-lg opacity-80" />
+              <img src={preview} alt="Preview" className="h-full w-full object-cover rounded-lg" />
             </>
           ) : (
             <div className="text-center text-slate-500">
-              <Camera size={24} className="mx-auto mb-2 opacity-40" />
-              <span className="text-sm">Tap to take a photo</span>
+              <Camera size={28} className="mx-auto mb-2 text-slate-400" />
+              <span className="text-sm font-medium">Tap to take a photo</span>
             </div>
           )}
         </div>
@@ -211,21 +211,21 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
 
       {/* Description Section with Voice Input */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
           <span>Description (Optional)</span>
           {voiceSupported && (
             <button
               type="button"
               onClick={toggleVoice}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-teal-400'}`}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm ${isListening ? 'bg-red-50 border border-red-200 text-red-600 animate-pulse' : 'bg-white border border-slate-200 text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200'}`}
             >
-              {isListening ? <MicOff size={12} /> : <Mic size={12} />}
+              {isListening ? <MicOff size={14} /> : <Mic size={14} />}
               {isListening ? 'Stop' : 'Voice'}
             </button>
           )}
         </label>
         <textarea 
-          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all duration-200 hover:bg-white/[0.06] text-sm"
+          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all duration-200 hover:bg-white text-sm shadow-sm"
           placeholder={isListening ? "🎤 Listening... speak now" : "Add any additional details, or use voice input..."}
           rows={3}
           value={description}
@@ -234,14 +234,14 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
       </div>
 
       {result?.error && (
-        <div className="bg-[#C2410C]/10 border border-[#C2410C]/30 text-[#EA580C] p-3 rounded-xl text-sm">
+        <div className="bg-orange-50 border border-orange-200 text-orange-600 p-3 rounded-xl text-sm font-medium">
           {result.error}
         </div>
       )}
 
       <Button 
         type="submit" 
-        className="w-full civic-gradient hover:opacity-90 text-white py-6 rounded-xl font-semibold text-lg transition-all active:scale-[0.98] shadow-lg shadow-teal-600/20"
+        className="w-full bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white py-6 rounded-xl font-bold text-lg transition-all active:scale-[0.98] shadow-lg shadow-teal-500/25 mt-2"
         disabled={!image || !lat || !lng || isSubmitting}
       >
         Submit Report

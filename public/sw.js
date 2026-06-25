@@ -1,4 +1,4 @@
-const CACHE_NAME = 'civic-triage-field-ops-v1';
+const CACHE_NAME = 'nagar-drishti-field-ops-v1';
 
 // Routes to cache for offline access
 const PRECACHE_URLS = [
