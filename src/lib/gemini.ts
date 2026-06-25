@@ -81,7 +81,11 @@ Then perform standard triage: categorize the issue, score severity (1-100), sugg
 Respond STRICTLY in the JSON schema provided.`;
   
   try {
-    const response = await ai.models.generateContent({
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('AI_TIMEOUT')), 15000)
+    );
+
+    const apiCallPromise = ai.models.generateContent({
       model: 'gemini-1.5-flash',
       contents: [
         {
@@ -103,8 +107,15 @@ Respond STRICTLY in the JSON schema provided.`;
       }
     });
 
+    const response = await Promise.race([apiCallPromise, timeoutPromise]) as any;
+
     if (response.text) {
-      return JSON.parse(response.text);
+      let rawText = response.text.trim();
+      if (rawText.startsWith('```json')) rawText = rawText.substring(7);
+      if (rawText.startsWith('```')) rawText = rawText.substring(3);
+      if (rawText.endsWith('```')) rawText = rawText.slice(0, -3);
+      
+      return JSON.parse(rawText.trim());
     }
     return null;
   } catch (error) {

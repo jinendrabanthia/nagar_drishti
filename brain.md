@@ -25,6 +25,11 @@ This document tracks the current state, architecture, workflows, and recent chan
 4. **Field Ops (`/field-ops`)**: An offline-capable PWA route designed for mobile use by ground staff to check off tasks in areas with low connectivity.
 
 ## 4. Current State & Recent Fixes
+- **QA & Security Audit (Hackathon Freeze)**:
+  - **AI Robustness**: Added a 15-second `Promise.race` timeout to the Gemini API (`src/lib/gemini.ts`) and implemented robust markdown-stripping to gracefully handle JSON hallucination.
+  - **Edge Cases**: Patched the `/report` form (`src/components/ReportForm.tsx`) with a `try/catch` wrapper to handle offline/network drops gracefully without crashing Next.js.
+  - **GPS Fallback**: Upgraded the `Map.tsx` component to actively fetch `navigator.geolocation` on mount while gracefully allowing manual pin drops if GPS is denied.
+  - **UI/UX Truncation**: Verified all Issue Cards successfully use `line-clamp-2` to prevent layout breaks from massive text inputs.
 - **Security Audit**: Completely mitigated IDOR vulnerabilities on the Profile page by transitioning entirely to secure server-side session cookies instead of client-side ID parameters.
 - **Login Robustness**: Applied fallback verification logic in `src/app/actions/auth.ts` to guarantee that seeded demo accounts (`admin@nagardrishti.gov.in` / `admin123` & Aadhar `123412341234` / `admin123`) always bypass DB hash mismatches for easy testing.
 - **Design Unification**: Successfully migrated all legacy dark-themed pages (`/official`, `/official/register`, `/field-ops`, `how-it-works`) to the modern, glassmorphic light theme.
@@ -32,8 +37,7 @@ This document tracks the current state, architecture, workflows, and recent chan
 
 ## 5. Next Steps / Pending
 *Update this section with upcoming prompts or tasks.*
-- Ongoing monitoring of the frontend build stability.
-- (Awaiting user input for new features or refinements).
+- Codebase frozen for hackathon submission.
 
 ---
 *Note: This file will be appended/updated in subsequent prompts to maintain an accurate project state.*

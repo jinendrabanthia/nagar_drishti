@@ -113,7 +113,18 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect?: (lat: number,
       }
       map.flyTo(e.latlng, map.getZoom());
     },
+    locationfound(e) {
+      setPosition(e.latlng);
+      if (onLocationSelect) {
+        onLocationSelect(e.latlng.lat, e.latlng.lng);
+      }
+      map.flyTo(e.latlng, map.getZoom());
+    }
   });
+
+  useEffect(() => {
+    map.locate();
+  }, [map]);
 
   return position === null ? null : (
     <Marker position={position}>

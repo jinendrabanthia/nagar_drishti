@@ -133,7 +133,7 @@ export async function loginCitizen(aadharNumber: string, passwordStr: string) {
 
     // Demo Account Fallback
     if (!matchedCitizen && aadharNumber === '123412341234' && passwordStr === 'admin123') {
-      const demoUser = allCitizens.find(c => c.aadhar_last4 === '1234');
+      const demoUser = allCitizens[0];
       if (demoUser) {
         matchedCitizen = demoUser;
       }

@@ -89,10 +89,17 @@ export default function ReportForm({ citizenId }: { citizenId: string }) {
     formData.append('description', description);
     formData.append('citizen_id', citizenId);
 
-    const response = await submitReport(formData);
-    
-    setIsSubmitting(false);
-    setResult(response);
+    try {
+      const response = await submitReport(formData);
+      setIsSubmitting(false);
+      setResult(response);
+    } catch (error) {
+      setIsSubmitting(false);
+      setResult({ 
+        success: false, 
+        error: "Network error. Please check your connection and try again." 
+      });
+    }
   };
 
   // Skeleton loader while AI is analyzing
