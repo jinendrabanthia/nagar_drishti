@@ -3,11 +3,15 @@
 import GooeyNav from './GooeyNav';
 import { ShieldAlert } from 'lucide-react';
 import NextLink from 'next/link';
+import Image from 'next/image';
+import LocationDisplay from './LocationDisplay';
 
 export default function TopNav() {
   const items = [
     { label: "Home", href: "/" },
+    { label: "How It Works", href: "/how-it-works" },
     { label: "My Reports", href: "/my-reports" },
+    { label: "Profile", href: "/profile" },
     { label: "Official Portal", href: "/official" },
   ];
 
@@ -15,11 +19,11 @@ export default function TopNav() {
     <header className="border-b border-slate-200/50 bg-white/70 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <NextLink href="/" className="flex items-center gap-3 group">
-          <div className="p-2 rounded-xl bg-teal-50 shadow-sm shadow-teal-500/10 group-hover:scale-105 transition-transform">
-            <ShieldAlert size={24} className="text-teal-600" />
+          <div className="rounded-full shadow-sm shadow-teal-500/10 group-hover:scale-105 transition-transform overflow-hidden border border-slate-100">
+            <Image src="/logo.jpg" alt="Nagar Drishti Logo" width={44} height={44} className="object-cover" />
           </div>
-          <span className="font-bold text-2xl tracking-tight text-slate-800">
-            Nagar Drishti<span className="text-teal-500">.ai</span>
+          <span className="font-bold text-2xl tracking-tight text-slate-800 flex items-center">
+            Nagar Drishti <LocationDisplay />
           </span>
         </NextLink>
         

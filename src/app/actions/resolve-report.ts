@@ -1,7 +1,25 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { translateTo } from '@/lib/translate';
+import { cookies } from 'next/headers';
+
+async function requireOfficialAuth() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('official_session')?.value;
+  if (!session) throw new Error('Unauthorized');
+  
+  const { data: official } = await supabaseAdmin
+    .from('officials')
+    .select('id, verification_status')
+    .eq('id', session)
+    .single();
+    
+  if (!official || official.verification_status !== 'approved') {
+    throw new Error('Unauthorized: Official not approved');
+  }
+  return session;
+}
 
 export async function resolveReport(formData: FormData) {
   const reportId = formData.get('report_id') as string;
@@ -13,9 +31,10 @@ export async function resolveReport(formData: FormData) {
   }
 
   try {
+    const officialId = await requireOfficialAuth();
     // Upload the "after" image
     const fileName = `resolved-${Date.now()}-${resolvedImage.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from('report-images')
       .upload(fileName, resolvedImage, { contentType: resolvedImage.type });
 
@@ -27,7 +46,7 @@ export async function resolveReport(formData: FormData) {
     const resolvedImageUrl = supabase.storage.from('report-images').getPublicUrl(fileName).data.publicUrl;
 
     // Update the report
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('reports')
       .update({
         status: 'resolved',
@@ -55,8 +74,10 @@ export async function replyToReport(reportId: string, replyText: string) {
   }
 
   try {
+    const officialId = await requireOfficialAuth();
+
     // Get the report's original language
-    const { data: report } = await supabase
+    const { data: report } = await supabaseAdmin
       .from('reports')
       .select('original_language, citizen_id')
       .eq('id', reportId)
@@ -72,7 +93,7 @@ export async function replyToReport(reportId: string, replyText: string) {
       translatedReply = await translateTo(replyText, report.original_language);
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('reports')
       .update({
         official_reply: replyText,

@@ -40,32 +40,32 @@ export default function OfficialLogin() {
     }
   };
 
-  const inputClass = "w-full bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-sm transition-all duration-200 hover:bg-white/[0.06]";
+  const inputClass = "w-full bg-white border border-slate-200 rounded-xl p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-sm transition-all duration-200 shadow-sm";
 
   return (
-    <div className="min-h-screen bg-[#0B1120] flex flex-col items-center justify-center p-4">
-      {/* Decorative background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-teal-600/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 selection:bg-teal-500/30 relative overflow-hidden">
+      {/* Decorative Light Background Gradients */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-teal-100/50 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-100/40 rounded-full blur-[120px]"></div>
       </div>
 
-      <div className="relative w-full max-w-md">
-        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 rounded-3xl blur-lg"></div>
-        <form onSubmit={handleSubmit} className="relative glass-card p-8 rounded-3xl space-y-6">
+      <div className="relative z-10 w-full max-w-md">
+        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/10 to-blue-500/10 rounded-3xl blur-lg"></div>
+        <form onSubmit={handleSubmit} className="relative glass-card-premium p-8 rounded-3xl space-y-6 shadow-xl border border-white/60">
           <div className="text-center">
             <div className="w-16 h-16 civic-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-500/20">
               <ShieldCheck className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-1">Command Center</h2>
-            <p className="text-slate-500 text-sm flex items-center justify-center gap-1.5">
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">Command Center</h2>
+            <p className="text-slate-500 text-sm flex items-center justify-center gap-1.5 font-medium">
               <Lock size={12} /> Official Authorized Access Only
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Official Email</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Official Email</label>
               <input 
                 type="email"
                 className={inputClass}
@@ -76,7 +76,7 @@ export default function OfficialLogin() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
               <input 
                 type="password"
                 className={inputClass}
@@ -88,13 +88,13 @@ export default function OfficialLogin() {
           </div>
 
           {pendingMessage && (
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-xl text-sm text-center">
+            <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm text-center font-medium shadow-sm">
               ⏳ {pendingMessage}
             </div>
           )}
 
           {error && (
-            <div className="bg-[#C2410C]/10 border border-[#C2410C]/30 text-[#EA580C] p-3 rounded-xl text-sm text-center">
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm text-center font-medium shadow-sm">
               {error}
             </div>
           )}
@@ -114,11 +114,11 @@ export default function OfficialLogin() {
             )}
           </Button>
 
-          <div className="text-center pt-1 space-y-2">
-            <NextLink href="/official/register" className="text-sm text-teal-400 hover:text-teal-300 transition-colors block">
+          <div className="text-center pt-2 space-y-3">
+            <NextLink href="/official/register" className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors block">
               New official? Register here
             </NextLink>
-            <NextLink href="/" className="text-xs text-slate-500 hover:text-slate-400 transition-colors block">
+            <NextLink href="/" className="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors block">
               ← Back to Citizen Portal
             </NextLink>
           </div>

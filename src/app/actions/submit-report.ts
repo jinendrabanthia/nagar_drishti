@@ -1,6 +1,7 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { cookies } from 'next/headers';
 import { analyzeReportImage } from '@/lib/gemini';
 import { detectAndTranslate } from '@/lib/translate';
 import {
@@ -25,7 +26,7 @@ async function reverseGeocodeForPinCode(lat: number, lng: number): Promise<strin
 }
 
 async function findAssignedOfficial(pinCode: string, citizenCity?: string): Promise<string | null> {
-  const { data: assignment } = await supabase
+  const { data: assignment } = await supabaseAdmin
     .from('area_assignments')
     .select('official_id')
     .eq('pin_code', pinCode)
@@ -33,7 +34,7 @@ async function findAssignedOfficial(pinCode: string, citizenCity?: string): Prom
   if (assignment) return assignment.official_id;
 
   if (citizenCity) {
-    const { data: cityAdmin } = await supabase
+    const { data: cityAdmin } = await supabaseAdmin
       .from('officials')
       .select('id')
       .eq('city', citizenCity)
@@ -43,7 +44,7 @@ async function findAssignedOfficial(pinCode: string, citizenCity?: string): Prom
     if (cityAdmin) return cityAdmin.id;
   }
 
-  const { data: anyAdmin } = await supabase
+  const { data: anyAdmin } = await supabaseAdmin
     .from('officials')
     .select('id')
     .eq('verification_status', 'approved')
@@ -58,7 +59,9 @@ export async function submitReport(formData: FormData) {
     const latStr = formData.get('lat') as string;
     const lngStr = formData.get('lng') as string;
     const description = formData.get('description') as string;
-    const citizenId = formData.get('citizen_id') as string;
+    
+    // Extract citizenId securely from the session cookie, NOT the form data
+    const citizenId = (await cookies()).get('citizen_id')?.value;
 
     if (!file || !latStr || !lngStr || !citizenId) {
       throw new Error("Missing required fields");
@@ -71,7 +74,7 @@ export async function submitReport(formData: FormData) {
     }
 
     // --- SECURITY: Validate citizen exists ---
-    const { data: citizenCheck } = await supabase
+    const { data: citizenCheck } = await supabaseAdmin
       .from('citizens')
       .select('id, city')
       .eq('id', citizenId)
@@ -108,7 +111,7 @@ export async function submitReport(formData: FormData) {
     
     // 2. Upload cleaned image to Supabase Storage
     const fileName = `${Date.now()}-${sanitizeFileName(file.name)}`;
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from('report-images')
       .upload(fileName, cleanBuffer, { contentType: file.type });
 
@@ -143,7 +146,7 @@ export async function submitReport(formData: FormData) {
     if (pinCode) {
       assignedTo = await findAssignedOfficial(pinCode, citizenCity);
     } else if (citizenCity) {
-      const { data: cityAdmin } = await supabase
+      const { data: cityAdmin } = await supabaseAdmin
         .from('officials')
         .select('id')
         .eq('city', citizenCity)
@@ -184,7 +187,7 @@ export async function submitReport(formData: FormData) {
       reportData.ai_severity = 100;
     }
 
-    const { data: insertData, error: dbError } = await supabase
+    const { data: insertData, error: dbError } = await supabaseAdmin
       .from('reports')
       .insert([reportData])
       .select()
@@ -197,7 +200,7 @@ export async function submitReport(formData: FormData) {
 
     // 9. Deduplication logic (uses exact coords, not display coords)
     if (insertData && !aiResult.is_prank_or_unrelated) {
-      const { data: nearbyReports, error: rpcError } = await supabase.rpc('get_reports_within_radius', {
+      const { data: nearbyReports, error: rpcError } = await supabaseAdmin.rpc('get_reports_within_radius', {
         query_lat: lat,
         query_lng: lng,
         radius_meters: 50
@@ -208,7 +211,7 @@ export async function submitReport(formData: FormData) {
         if (others.length > 0) {
           const closest = others[0];
           if (closest.ai_category === aiResult.issue_category) {
-            await supabase
+            await supabaseAdmin
               .from('reports')
               .update({ status: 'duplicate', merged_into_id: closest.id })
               .eq('id', insertData.id);

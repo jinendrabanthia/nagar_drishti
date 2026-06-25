@@ -1,22 +1,28 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { cookies } from 'next/headers';
 import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({});
 
-export async function generateImpactReport(officialId: string) {
+export async function generateImpactReport() {
+  const cookieStore = await cookies();
+  const officialId = cookieStore.get('official_session')?.value;
+  
+  if (!officialId) return { success: false, error: 'Unauthorized' };
+
   // 1. Fetch official's city/details
-  const { data: official } = await supabase
+  const { data: official } = await supabaseAdmin
     .from('officials')
-    .select('name, city')
+    .select('name, city, verification_status')
     .eq('id', officialId)
     .single();
 
-  if (!official) return { success: false, error: 'Official not found' };
+  if (!official || official.verification_status !== 'approved') return { success: false, error: 'Official not found or not approved' };
 
   // 2. Fetch all reports for this city (or all if not city-specific for demo)
-  const { data: reports } = await supabase
+  const { data: reports } = await supabaseAdmin
     .from('reports')
     .select('*')
     .order('created_at', { ascending: false });

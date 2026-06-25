@@ -1,10 +1,30 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { cookies } from 'next/headers';
+
+async function requireOfficialAuth() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('official_session')?.value;
+  if (!session) throw new Error('Unauthorized');
+  
+  const { data: official } = await supabaseAdmin
+    .from('officials')
+    .select('id, verification_status')
+    .eq('id', session)
+    .single();
+    
+  if (!official || official.verification_status !== 'approved') {
+    throw new Error('Unauthorized: Official not approved');
+  }
+  return session;
+}
 
 // Simulates transforming our modern schema into a legacy municipality XML/JSON format
 export async function generateRPAPayload(reportId: string) {
-  const { data: report } = await supabase
+  await requireOfficialAuth();
+  
+  const { data: report } = await supabaseAdmin
     .from('reports')
     .select('*')
     .eq('id', reportId)
@@ -32,7 +52,8 @@ export async function generateRPAPayload(reportId: string) {
 }
 
 export async function fetchRPAList() {
-  const { data } = await supabase
+  await requireOfficialAuth();
+  const { data } = await supabaseAdmin
     .from('reports')
     .select('id, ai_category, created_at')
     .order('created_at', { ascending: false })

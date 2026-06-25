@@ -141,9 +141,9 @@ export default function FieldTaskCard({ task, onUpdate }: { task: any, onUpdate:
           className="w-full bg-slate-800 hover:bg-slate-900 disabled:opacity-50 disabled:grayscale text-white py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.98]"
         >
           {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          Queue Local Update
         </button>
 
+      </div>
       </div>
     </BorderGlow>
   );

@@ -130,26 +130,22 @@ alter table public.officials enable row level security;
 alter table public.area_assignments enable row level security;
 alter table public.rate_limits enable row level security;
 
--- Reports: public can read (display coords only), insert, and update status
+-- Reports: public can read (display coords only)
 create policy "Allow public read access" on public.reports for select to public using (true);
-create policy "Allow public insert" on public.reports for insert to public with check (true);
-create policy "Allow public update" on public.reports for update to public using (true);
+-- SECURITY: Inserts/Updates are handled securely via Server Actions using the Service Role Key
 
--- Citizens: public can read own, insert
+-- Citizens: public can read own
 create policy "Allow public read citizens" on public.citizens for select to public using (true);
-create policy "Allow public insert citizens" on public.citizens for insert to public with check (true);
+-- SECURITY: Inserts are handled securely via Server Actions using the Service Role Key
 
--- Officials: public read (name, city, status only), insert
+-- Officials: public read (name, city, status only)
 create policy "Allow public read officials" on public.officials for select to public using (true);
-create policy "Allow public insert officials" on public.officials for insert to public with check (true);
-create policy "Allow public update officials" on public.officials for update to public using (true);
+-- SECURITY: Inserts/Updates are handled securely via Server Actions using the Service Role Key
 
 -- Area assignments: read only
 create policy "Allow public read area_assignments" on public.area_assignments for select to public using (true);
-create policy "Allow public insert area_assignments" on public.area_assignments for insert to public with check (true);
 
 -- Rate limits
-create policy "Allow public insert rate_limits" on public.rate_limits for insert to public with check (true);
 create policy "Allow public read rate_limits" on public.rate_limits for select to public using (true);
 
 -- ============================================================
@@ -258,3 +254,13 @@ values (
   'Mumbai',
   'en'
 ) on conflict (aadhar_hash) do nothing;
+
+-- ============================================================
+-- 13. ENABLE REALTIME
+-- ============================================================
+-- Add tables to the supabase_realtime publication to enable real-time subscriptions
+alter publication supabase_realtime add table public.reports;
+alter publication supabase_realtime add table public.citizens;
+alter publication supabase_realtime add table public.officials;
+alter publication supabase_realtime add table public.area_assignments;
+alter publication supabase_realtime add table public.rate_limits;
